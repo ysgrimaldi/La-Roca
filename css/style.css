@@ -13,3 +13,8 @@
   height: 100%;
   min-height: 400px;
 }
+
+.status-meta span,
+.status-meta strong {
+  display: block;
+}
