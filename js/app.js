@@ -1,5 +1,5 @@
 (() => {
-  let l = localStorage.getItem("laRocaLanguage") || "en";
+  let l = localStorage.getItem("laRocaLanguage") || "es";
 
   const t = (key) => TRANSLATIONS[l]?.[key] || key;
 
