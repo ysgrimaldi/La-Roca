@@ -1,0 +1,1 @@
+window.LA_ROCCA_CONFIG={timezone:"America/Santo_Domingo",whatsappUrl:"https://wa.me/18297757940",googleMapsUrl:"https://maps.app.goo.gl/8HytjmotGRnsfbnz5",announcement:{en:"",es:""},manualStatusOverride:null};
