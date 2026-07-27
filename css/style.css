@@ -18,3 +18,32 @@
 .status-meta strong {
   display: block;
 }
+.gallery-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.gallery-card img {
+  display: block;
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+.gallery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: none;
+}
+
+@media (max-width: 767px) {
+  .gallery-card img {
+    height: 260px;
+  }
+}
