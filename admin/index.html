@@ -86,60 +86,55 @@
           </div>
 
           <!-- Status controls -->
-          <div class="mb-4">
+<div class="status-box mb-4">
+  <small>Estado actual</small>
+  <div id="adminStatus" class="admin-status">—</div>
+</div>
 
-            <h2 class="h5 mb-2">
-              Estado del gimnasio
-            </h2>
+<div class="mb-4">
+  <h2 class="h5 mb-2">Estado del gimnasio</h2>
 
-            <div class="status-buttons">
+  <div class="status-buttons">
 
-              <button
-                id="automaticBtn"
-                class="status-control automatic"
-                type="button"
-              >
-                Automático
-              </button>
+    <button
+      id="automaticBtn"
+      class="status-control automatic"
+      type="button">
+      Automático
+    </button>
 
-              <button
-                id="cleaningBtn"
-                class="status-control cleaning"
-                type="button"
-              >
-                <span>🧹</span>
-                En limpieza
-              </button>
+    <button
+      id="cleaningBtn"
+      class="status-control cleaning"
+      type="button">
+      <span>🧹</span>
+      En limpieza
+    </button>
 
-              <button
-                id="closedBtn"
-                class="status-control closed"
-                type="button"
-              >
-                Cerrado
-              </button>
+    <button
+      id="closedBtn"
+      class="status-control closed"
+      type="button">
+      Cerrado
+    </button>
 
-              <button
-                id="temporaryClosedBtn"
-                class="status-control temporary"
-                type="button"
-              >
-                <span>⏳</span>
-                Temporalmente cerrado
-              </button>
+    <button
+      id="temporaryClosedBtn"
+      class="status-control temporary"
+      type="button">
+      <span>⏳</span>
+      Temporalmente cerrado
+    </button>
 
-            </div>
+  </div>
 
-            <p class="text-secondary small mt-2 mb-0">
-              <strong>Automático</strong> usa el horario semanal.
-              <strong>En limpieza</strong> permanece activo hasta cambiarlo.
-              <strong>Cerrado</strong> vuelve automáticamente al horario normal
-              mañana.
-              <strong>Temporalmente cerrado</strong> vuelve automáticamente al
-              horario normal después de 2 horas.
-            </p>
-
-          </div>
+  <p class="text-secondary small mt-2 mb-0">
+    <strong>Automático</strong> usa el horario semanal.
+    <strong>En limpieza</strong> permanece activo hasta cambiarlo.
+    <strong>Cerrado</strong> vuelve automáticamente al horario normal mañana.
+    <strong>Temporalmente cerrado</strong> vuelve automáticamente al horario normal después de 2 horas.
+  </p>
+</div>
 
           <!-- Announcements -->
           <label
