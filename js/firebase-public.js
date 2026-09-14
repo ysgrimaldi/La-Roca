@@ -8,23 +8,22 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-const c = LA_ROCCA_CONFIG;
+const config = LA_ROCCA_CONFIG;
 
-const ok =
-  c.firebaseConfig?.apiKey &&
-  !c.firebaseConfig.apiKey.includes("PASTE");
+const firebaseReady =
+  config.firebaseConfig?.apiKey &&
+  !config.firebaseConfig.apiKey.includes("PASTE");
 
 window.LA_ROCCA_LIVE_STATE = {
   manualStatus: "automatic",
-  temporaryClosed: false,
   announcement: {
-    en: "",
-    es: ""
+    es: "",
+    en: ""
   }
 };
 
-if (ok) {
-  const app = initializeApp(c.firebaseConfig);
+if (firebaseReady) {
+  const app = initializeApp(config.firebaseConfig);
   const db = getFirestore(app);
   const statusRef = doc(db, "gym", "status");
 
@@ -32,9 +31,53 @@ if (ok) {
     statusRef,
     (snapshot) => {
       if (!snapshot.exists()) {
+        window.LA_ROCCA_LIVE_STATE = {
+          manualStatus: "automatic",
+          announcement: {
+            es: "",
+            en: ""
+          }
+        };
+
+        window.dispatchEvent(
+          new Event("la-roca-live-update")
+        );
+
         return;
       }
 
+      const data = snapshot.data();
+
+      window.LA_ROCCA_LIVE_STATE = {
+        manualStatus: data.manualStatus || "automatic",
+
+        temporaryClosedStartedAt:
+          data.temporaryClosedStartedAt
+            ?.toDate?.() || null,
+
+        closedUntil:
+          data.closedUntil
+            ?.toDate?.() || null,
+
+        announcement:
+          data.announcement || {
+            es: "",
+            en: ""
+          }
+      };
+
+      window.dispatchEvent(
+        new Event("la-roca-live-update")
+      );
+    },
+    (error) => {
+      console.error(
+        "La Roca Firebase error:",
+        error
+      );
+    }
+  );
+}
       const data = snapshot.data();
 
       let manualStatus = data.manualStatus || "automatic";
