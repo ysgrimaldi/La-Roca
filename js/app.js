@@ -1,83 +1,167 @@
 (() => {
-  let l = localStorage.getItem("laRocaLanguage") || "es";
+  let language =
+    localStorage.getItem("laRocaLanguage") || "es";
 
   const t = (key) =>
-    TRANSLATIONS[l]?.[key] || key;
+    TRANSLATIONS[language]?.[key] || key;
+
 
   function setLinks() {
-    const whatsapp = LA_ROCCA_CONFIG.whatsappUrl;
-    const maps = LA_ROCCA_CONFIG.googleMapsUrl;
+    const whatsapp =
+      LA_ROCCA_CONFIG.whatsappUrl;
 
-    const heroWhatsApp =
-      document.getElementById("heroWhatsApp");
+    const maps =
+      LA_ROCCA_CONFIG.googleMapsUrl;
 
     const contactWhatsApp =
-      document.getElementById("contactWhatsApp");
-
-    const floatingWhatsApp =
-      document.getElementById("floatingWhatsApp");
-
-    const heroMaps =
-      document.getElementById("heroMaps");
+      document.getElementById(
+        "contactWhatsApp"
+      );
 
     const contactMaps =
-      document.getElementById("contactMaps");
-
-    if (heroWhatsApp) {
-      heroWhatsApp.href = whatsapp;
-    }
+      document.getElementById(
+        "contactMaps"
+      );
 
     if (contactWhatsApp) {
-      contactWhatsApp.href = whatsapp;
-    }
-
-    if (floatingWhatsApp) {
-      floatingWhatsApp.href = whatsapp;
-    }
-
-    if (heroMaps) {
-      heroMaps.href = maps;
+      contactWhatsApp.href =
+        whatsapp;
     }
 
     if (contactMaps) {
-      contactMaps.href = maps;
+      contactMaps.href =
+        maps;
     }
   }
 
-  function render() {
-    const automaticStatus =
+
+  function getCurrentStatus() {
+    const automatic =
       LaRoccaSchedule.automaticStatus();
 
-    const liveState =
+    const live =
       window.LA_ROCCA_LIVE_STATE || {};
 
-    let currentStatus =
-      automaticStatus.state;
+    const manual =
+      live.manualStatus || "automatic";
 
-    // Manual status overrides the normal schedule.
-    if (liveState.manualStatus === "cleaning") {
-      currentStatus = "cleaning";
+
+    /*
+     * Manual cleaning
+     */
+    if (manual === "cleaning") {
+      return {
+        state: "cleaning",
+        automatic
+      };
     }
 
-    if (liveState.manualStatus === "closed") {
-      currentStatus = "closed";
+
+    /*
+     * Manual closed
+     *
+     * This expires at midnight.
+     */
+    if (manual === "closed") {
+      const closedUntil =
+        live.closedUntil;
+
+      if (
+        closedUntil &&
+        Date.now() < closedUntil.getTime()
+      ) {
+        return {
+          state: "closed",
+          automatic
+        };
+      }
+
+      return {
+        state: automatic.state,
+        automatic
+      };
     }
 
-    if (liveState.manualStatus === "temporaryClosed") {
-      currentStatus = "temporaryClosed";
+
+    /*
+     * Temporary closure
+     *
+     * This expires after 2 hours.
+     */
+    if (manual === "temporaryClosed") {
+      const startedAt =
+        live.temporaryClosedStartedAt;
+
+      if (
+        startedAt &&
+        Date.now() -
+          startedAt.getTime() <
+          2 * 60 * 60 * 1000
+      ) {
+        return {
+          state: "temporaryClosed",
+          automatic
+        };
+      }
+
+      return {
+        state: automatic.state,
+        automatic
+      };
     }
 
+
+    /*
+     * Normal automatic schedule.
+     */
+    return {
+      state: automatic.state,
+      automatic
+    };
+  }
+
+
+  function render() {
+    const status =
+      getCurrentStatus();
+
+    const currentStatus =
+      status.state;
+
+    const automatic =
+      status.automatic;
+
+
+    /*
+     * Status card
+     */
     const statusCard =
-      document.getElementById("statusCard");
+      document.getElementById(
+        "statusCard"
+      );
 
-    statusCard.dataset.status =
-      currentStatus;
+    if (statusCard) {
+      statusCard.dataset.status =
+        currentStatus;
+    }
 
-    document.getElementById(
-      "statusLabel"
-    ).textContent =
-      t(`status.${currentStatus}`);
 
+    const statusLabel =
+      document.getElementById(
+        "statusLabel"
+      );
+
+    if (statusLabel) {
+      statusLabel.textContent =
+        t(
+          `status.${currentStatus}`
+        );
+    }
+
+
+    /*
+     * Status message
+     */
     const currentTime =
       LaRoccaSchedule.parts();
 
@@ -85,46 +169,62 @@
       currentTime.hour * 60 +
       currentTime.minute;
 
-    let message;
+    let message = "";
 
-    if (currentStatus === "cleaning") {
+
+    if (
+      currentStatus === "cleaning"
+    ) {
       message =
-        l === "es"
+        language === "es"
           ? "El gimnasio está siendo limpiado."
           : "The gym is currently being cleaned.";
     }
 
-    else if (currentStatus === "closed") {
+
+    else if (
+      currentStatus === "closed"
+    ) {
       message =
-        l === "es"
+        language === "es"
           ? "El gimnasio está cerrado."
           : "The gym is currently closed.";
     }
 
-    else if (currentStatus === "temporaryClosed") {
+
+    else if (
+      currentStatus ===
+      "temporaryClosed"
+    ) {
       message =
-        l === "es"
+        language === "es"
           ? "El gimnasio está temporalmente cerrado."
           : "The gym is temporarily closed.";
     }
 
-    else if (currentStatus === "open") {
+
+    else if (
+      currentStatus === "open"
+    ) {
       message =
         `${t("status.closesIn")} ` +
         LaRoccaSchedule.diff(
           LaRoccaSchedule.mins(
-            automaticStatus.today.close
+            automatic.today.close
           ),
           currentMinutes,
-          l
+          language
         );
     }
+
 
     else {
       const nextOpening =
         LaRoccaSchedule.nextOpening();
 
-      if (nextOpening?.days === 0) {
+      if (
+        nextOpening?.days === 0
+      ) {
         message =
           `${t("status.opensIn")} ` +
           LaRoccaSchedule.diff(
@@ -132,14 +232,14 @@
               nextOpening.time
             ),
             currentMinutes,
-            l
+            language
           );
       }
 
       else if (nextOpening) {
         const day =
           new Intl.DateTimeFormat(
-            l === "es"
+            language === "es"
               ? "es-DO"
               : "en-US",
             {
@@ -159,7 +259,7 @@
           `${t("status.nextOpen")}: ` +
           `${day}, ${LaRoccaSchedule.fmt(
             nextOpening.time,
-            l
+            language
           )}`;
       }
 
@@ -169,223 +269,162 @@
       }
     }
 
-    document.getElementById(
-      "statusMessage"
-    ).textContent = message;
 
-    document.getElementById(
-      "todayHours"
-    ).textContent =
-      automaticStatus.today
-        ? `${LaRoccaSchedule.fmt(
-            automaticStatus.today.open,
-            l
-          )} – ${LaRoccaSchedule.fmt(
-            automaticStatus.today.close,
-            l
-          )}`
-        : t("status.closedToday");
+    const statusMessage =
+      document.getElementById(
+        "statusMessage"
+      );
 
+    if (statusMessage) {
+      statusMessage.textContent =
+        message;
+    }
+
+
+    /*
+     * Today's hours
+     */
+    const todayHours =
+      document.getElementById(
+        "todayHours"
+      );
+
+    if (todayHours) {
+      todayHours.textContent =
+        automatic.today
+          ? `${LaRoccaSchedule.fmt(
+              automatic.today.open,
+              language
+            )} – ${LaRoccaSchedule.fmt(
+              automatic.today.close,
+              language
+            )}`
+          : t(
+              "status.closedToday"
+            );
+    }
+
+
+    /*
+     * Announcement
+     */
     const announcement =
-      liveState.announcement?.[l] || "";
+      window.LA_ROCCA_LIVE_STATE
+        ?.announcement?.[language] || "";
 
     const banner =
       document.getElementById(
         "announcementBanner"
       );
 
-    if (announcement.trim()) {
+    const announcementText =
       document.getElementById(
         "announcementText"
-      ).textContent = announcement;
+      );
 
-      banner.classList.remove("d-none");
-    }
+    if (
+      banner &&
+      announcementText
+    ) {
+      if (announcement.trim()) {
+        announcementText.textContent =
+          announcement;
 
-    else {
-      banner.classList.add("d-none");
+        banner.classList.remove(
+          "d-none"
+        );
+      } else {
+        banner.classList.add(
+          "d-none"
+        );
+      }
     }
   }
 
+
   function translate() {
-    document.documentElement.lang = l;
+    document.documentElement.lang =
+      language;
+
 
     document
-      .querySelectorAll("[data-i18n]")
+      .querySelectorAll(
+        "[data-i18n]"
+      )
       .forEach((element) => {
         element.textContent =
-          t(element.dataset.i18n);
+          t(
+            element.dataset.i18n
+          );
       });
 
-    document.getElementById(
-      "languageToggle"
-    ).textContent =
-      l === "en" ? "ES" : "EN";
+
+    const languageToggle =
+      document.getElementById(
+        "languageToggle"
+      );
+
+    if (languageToggle) {
+      languageToggle.textContent =
+        language === "en"
+          ? "ES"
+          : "EN";
+    }
+
 
     render();
   }
 
-  document.getElementById(
-    "languageToggle"
-  ).onclick = () => {
-    l =
-      l === "en"
-        ? "es"
-        : "en";
 
-    localStorage.setItem(
-      "laRocaLanguage",
-      l
+  /*
+   * Language switcher
+   */
+  const languageToggle =
+    document.getElementById(
+      "languageToggle"
     );
 
-    translate();
-  };
+  if (languageToggle) {
+    languageToggle.onclick = () => {
+      language =
+        language === "en"
+          ? "es"
+          : "en";
 
+      localStorage.setItem(
+        "laRocaLanguage",
+        language
+      );
+
+      translate();
+    };
+  }
+
+
+  /*
+   * Firebase live updates
+   */
   window.addEventListener(
     "la-roca-live-update",
     render
   );
 
+
+  /*
+   * Initial setup
+   */
   setLinks();
   translate();
 
+
+  /*
+   * Re-check status every 30 seconds.
+   * This is important because temporary
+   * closures and daily closures can expire
+   * without a new Firebase update.
+   */
   setInterval(
     render,
     30000
   );
-})();
-```
-
-    const currentTime = LaRoccaSchedule.parts();
-    const currentMinutes =
-      currentTime.hour * 60 + currentTime.minute;
-
-    let message;
-
-    if (currentStatus === "cleaning") {
-      message =
-        l === "es"
-          ? "El gimnasio está siendo limpiado."
-          : "The gym is currently being cleaned.";
-    } else if (currentStatus === "open") {
-      message =
-        `${t("status.closesIn")} ` +
-        LaRoccaSchedule.diff(
-          LaRoccaSchedule.mins(automaticStatus.today.close),
-          currentMinutes,
-          l
-        );
-    } else {
-      const nextOpening = LaRoccaSchedule.nextOpening();
-
-      if (nextOpening?.days === 0) {
-        message =
-          `${t("status.opensIn")} ` +
-          LaRoccaSchedule.diff(
-            LaRoccaSchedule.mins(nextOpening.time),
-            currentMinutes,
-            l
-          );
-      } else if (nextOpening) {
-        const day = new Intl.DateTimeFormat(
-          l === "es" ? "es-DO" : "en-US",
-          {
-            weekday: "long",
-            timeZone: LA_ROCCA_CONFIG.timezone,
-          }
-        ).format(
-          new Date(Date.now() + nextOpening.days * 86400000)
-        );
-
-        message =
-          `${t("status.nextOpen")}: ` +
-          `${day}, ${LaRoccaSchedule.fmt(nextOpening.time, l)}`;
-      } else {
-        message = t("status.closedToday");
-      }
-    }
-
-    document.getElementById("statusMessage").textContent = message;
-
-    document.getElementById("todayHours").textContent =
-      automaticStatus.today
-        ? `${LaRoccaSchedule.fmt(
-            automaticStatus.today.open,
-            l
-          )} – ${LaRoccaSchedule.fmt(
-            automaticStatus.today.close,
-            l
-          )}`
-        : t("status.closedToday");
-
-    const lastUpdated = document.getElementById("lastUpdated");
-
-    if (lastUpdated) {
-      lastUpdated.textContent = liveState.lastUpdated
-        ? new Intl.DateTimeFormat(
-            l === "es" ? "es-DO" : "en-US",
-            {
-              hour: "numeric",
-              minute: "2-digit",
-            }
-          ).format(liveState.lastUpdated)
-        : t("status.automatic");
-    }
-
-    const announcement =
-      liveState.announcement?.[l] || "";
-
-    const banner =
-      document.getElementById("announcementBanner");
-
-    if (announcement.trim()) {
-      document.getElementById(
-        "announcementText"
-      ).textContent = announcement;
-
-      banner.classList.remove("d-none");
-    } else {
-      banner.classList.add("d-none");
-    }
-  }
-
-  function translate() {
-    document.documentElement.lang = l;
-
-    document
-      .querySelectorAll("[data-i18n]")
-      .forEach((element) => {
-        element.textContent =
-          t(element.dataset.i18n);
-      });
-
-    document.getElementById(
-      "languageToggle"
-    ).textContent = l === "en" ? "ES" : "EN";
-
-    render();
-  }
-
-  document.getElementById(
-    "languageToggle"
-  ).onclick = () => {
-    l = l === "en" ? "es" : "en";
-
-    localStorage.setItem(
-      "laRocaLanguage",
-      l
-    );
-
-    translate();
-  };
-
-  window.addEventListener(
-    "la-roca-live-update",
-    render
-  );
-
-  setLinks();
-  translate();
-
-  setInterval(render, 30000);
 })();
